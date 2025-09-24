@@ -31,3 +31,36 @@ Later milestones: robust scraping, de-duplication, pay band normalization, quali
 - Sample SQL tests + expected output
 
 ---
+## ⚙️ Setup
+
+SSH into the general-use host:
+
+```bash
+ssh <your_user>@ubuntu2204-004.student.cs.uwaterloo.ca
+```
+
+Then clone the repo:
+
+```bash
+git clone git@github.com:bkctrl/cs348-project.git
+cd cs348-project/milestone-0
+```
+
+If SSH fails, use HTTPS instead:
+
+```bash
+git clone https://github.com/bkctrl/cs348-project.git
+```
+
+Now run the `setup.sh` script:
+```bash
+chmod +x setup.sh && ./setup.sh
+```
+
+Verify the database:
+```bash
+mysql -u default-user -p -e "SHOW DATABASES;"
+```
+---
+
+
