@@ -24,4 +24,3 @@ echo "Database '$DB_NAME' created successfully!"
 echo ""
 echo "You can connect to it using:"
 echo "  mysql -u $DB_USER -p $DB_NAME"
-
