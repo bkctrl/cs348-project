@@ -17,7 +17,7 @@
 
 Create database and schema:
 ```bash
-mysql -u root -p < milestone-1/c2_schema.sql
+mysql -u root -p < milestone-1/create-tables.sql
 ```
 
 Insert sample data and verify (test dataset from C3):
@@ -83,4 +83,5 @@ Visit http://127.0.0.1:5000.
 
 #### Feature: Average Salary by Term (R9)
 <img width="1477" height="472" alt="Screenshot 2025-10-19 at 3 57 16 AM" src="https://github.com/user-attachments/assets/0f1bc9ec-50f0-465f-92dc-1fea2902c4fe" />
+
 
