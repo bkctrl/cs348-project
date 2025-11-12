@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Average by Term</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+    <h1 class="text-center mb-4">Average Hourly by Term</h1>
+    
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Average Salaries by Academic Term</h5>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Term</th>
+              <th class="text-end">Avg ($/hr)</th>
+              <th class="text-end">Reports</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td><span class="badge bg-info">{{ r.term }}</span></td>
+                <td class="text-end">
+                  <span class="badge bg-success">${{ r.avg_hourly }}</span>
+                </td>
+                <td class="text-end">
+                  <span class="badge bg-secondary">{{ r.n_reports }} reports</span>
+                </td>
+              </tr>
+            {% endfor %}
+            {% if rows|length == 0 %}
+              <tr>
+                <td colspan="4" class="text-center py-5">
+                  <h3 class="text-muted">No records found</h3>
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="text-center mt-4">
+      <a href="/" class="btn btn-secondary">Back to Home</a>
+    </div>
+  </div>
+</body>
+</html>

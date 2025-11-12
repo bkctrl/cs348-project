@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Search Jobs</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+    <h1 class="text-center mb-4">Search Jobs</h1>
+    
+    <div class="card mb-4">
+      <div class="card-body">
+        <form action="/search" method="get" class="row g-2">
+          <div class="col-md-8">
+            <input type="text" class="form-control" name="q" value="{{ q or '' }}" placeholder="software / Toronto / Google">
+          </div>
+          <div class="col-md-4">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if rows is not none %}
+      {% if rows|length > 0 %}
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Search Results ({{ rows|length }} found)</h5>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Job Title</th>
+                  <th>Employer</th>
+                  <th>Location</th>
+                  <th>Term</th>
+                  <th class="text-end">Hourly ($)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in rows %}
+                  <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><strong>{{ r.title }}</strong></td>
+                    <td>{{ r.employer }}</td>
+                    <td>{{ r.location }}</td>
+                    <td><span class="badge bg-info">{{ r.term }}</span></td>
+                    <td class="text-end">
+                      <span class="badge bg-success">${{ r.hourly_rate }}</span>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% else %}
+        <div class="card">
+          <div class="card-body text-center py-5">
+            <h3 class="text-muted">No results found</h3>
+            <p class="text-muted">Try adjusting your search terms.</p>
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+
+    <div class="text-center mt-4">
+      <a href="/" class="btn btn-secondary">Back to Home</a>
+    </div>
+  </div>
+</body>
+</html>
