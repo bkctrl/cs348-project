@@ -124,5 +124,24 @@ def avg_by_term():
   cur.close(); db.close()
   return render_template("avg_by_term.html", rows=rows)
 
+# Feature: View Blacklisted Employers (R10)
+@app.get("/blacklist")
+def view_blacklist():
+  db = get_db(); cur = db.cursor()
+  cur.execute("""
+      SELECT e.name AS employer_name,
+            b.reason,
+            b.date_added
+      FROM Employer e
+      JOIN Blacklist b ON e.employer_id = b.employer_id
+      WHERE e.blacklist_flag = TRUE
+      ORDER BY b.date_added DESC, e.name
+  """)
+  # Map tuple results to dictionaries, matching the style of the other routes
+  rows = [{"employer_name": r[0], "reason": r[1], "date_added": r[2]} for r in cur.fetchall()]
+  cur.close(); db.close()
+  return render_template("blacklist.html", reports=rows)
+
+
 if __name__ == "__main__":
   app.run(debug=True)
