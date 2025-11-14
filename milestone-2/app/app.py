@@ -137,6 +137,50 @@ def top_companies():
     cur.close(); db.close()
     return render_template("select_role.html", roles=roles)
 
+# Feature: Average Salary by Faculty / Program (R8)
+@app.get("/avg-salary")
+def avg_salary():
+    fac = request.args.get("faculty", "").strip()
+    prog = request.args.get("program_kw", "").strip()
+    term = request.args.get("term", "").strip()
+
+    fac_like = f"%{fac}%" if fac else "%"
+    prog_like = f"%{prog}%" if prog else "%"
+    term_like = f"%{term}%" if term else "%"
+
+    db = get_db()
+    cur = db.cursor()
+
+    cur.execute("""
+      SELECT s.faculty,
+             s.program,
+             ROUND(AVG(sa.hourly_rate), 2) AS avg_hourly_rate,
+             COUNT(*) AS n_placements
+      FROM Placement p
+      JOIN Student s ON p.student_id = s.student_id
+      JOIN Salary sa ON p.job_id = sa.job_id
+      JOIN JobPosting j ON p.job_id = j.job_id
+      WHERE s.faculty LIKE %s
+        AND s.program LIKE %s
+        AND j.term LIKE %s
+      GROUP BY s.faculty, s.program
+      ORDER BY avg_hourly_rate DESC, n_placements DESC
+    """, (fac_like, prog_like, term_like))
+
+    rows = [
+      {
+        "faculty": r[0],
+        "program": r[1],
+        "avg_hourly_rate": float(r[2]),
+        "n_placements": int(r[3])
+      }
+      for r in cur.fetchall()
+    ]
+
+    cur.close(); db.close()
+
+    return render_template("avg_salary.html", rows=rows, faculty=fac, program_kw=prog, term=term)
+
 # Feature: Average Salary by Term (R9)
 @app.get("/avg-by-term")
 def avg_by_term():
