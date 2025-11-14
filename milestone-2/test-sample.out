@@ -1,27 +1,43 @@
--- 1. Employers
-+-------------+-----------+----------------+
-| employer_id | name      | blacklist_flag |
-+-------------+-----------+----------------+
-| 1           | Google    | 0              |
-| 2           | Shopify   | 0              |
-| 3           | TinyStart | 0              |
-| 4           | BadCorp   | 1              |
-+-------------+-----------+----------------+
+-- Feature 1: Keyword-Based Job Search (q = 'Software')
++--------------------------+------------+--------------+-------------+-------------+
+| title                    | employer   | location     | term        | hourly_rate |
++--------------------------+------------+--------------+-------------+-------------+
+| Software Engineer Intern | Google     | Waterloo, ON | Winter 2025 |       40.00 |
+| Software Engineer Intern | Microsoft  | Toronto, ON  | Winter 2025 |       50.00 |
++--------------------------+------------+--------------+-------------+-------------+
 
--- 2. Jobs with salary info
-+-----------+----------------+-------------+
-| name      | title          | hourly_rate |
-+-----------+----------------+-------------+
-| Google    | SWE Intern     | 45.00       |
-| Shopify   | Data Intern    | 35.00       |
-| TinyStart | Web Intern     | 16.00       |
-| BadCorp   | Support Intern | 12.00       |
-+-----------+----------------+-------------+
 
--- 3. Companies paying below $18/hour
-+-----------+-------------+
-| name      | hourly_rate |
-+-----------+-------------+
-| TinyStart | 16.00       |
-| BadCorp   | 12.00       |
-+-----------+-------------+
+-- Feature 2: Top-Paying Companies by Given Role ('Software Engineer Intern')
++-----------+------------+-----------+
+| company   | avg_hourly | n_reports |
++-----------+------------+-----------+
+| Microsoft |      50.00 |         1 |
+| Google    |      40.00 |         1 |
++-----------+------------+-----------+
+
+
+-- Feature 3: Average Salary by Faculty / Program
++------------+-------------------+------------------+-------------+
+| faculty    | program           | avg_hourly_rate  | n_placements|
++------------+-------------------+------------------+-------------+
+| Engineering| Computer Science  |            45.00 |           2 |
++------------+-------------------+------------------+-------------+
+
+
+-- Feature 4: Average Hourly Salary by Term
++-------------+------------+-----------+
+| term        | avg_hourly | n_reports |
++-------------+------------+-----------+
+| Fall 2025   |      22.33 |         3 |
+| Winter 2025 |      35.33 |         3 |
++-------------+------------+-----------+
+
+
+-- Feature 5: View Blacklisted Employers
++----------------+----------------------------------------+------------+
+| employer_name  | reason                                 | date_added |
++----------------+----------------------------------------+------------+
+| Scam Co        | Rescinded offers last minute           | 2025-02-10 |
+| Scam Co        | Toxic work environment reported        | 2025-02-01 |
+| Risky Startup  | Repeatedly failed to pay students      | 2025-01-15 |
++----------------+----------------------------------------+------------+
