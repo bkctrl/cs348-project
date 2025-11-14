@@ -107,6 +107,36 @@ def search():
   cur.close(); db.close()
   return render_template("search.html", q=keyword, rows=rows)
 
+# Feature: Top-Paying Companies by Given Role (R7)
+@app.route("/top-companies", methods=["GET", "POST"])
+def top_companies():
+  db = get_db()
+  cur = db.cursor(dictionary=True)
+
+  role = request.form.get("role") if request.method == "POST" else None
+
+  if role:
+    cur.execute("""
+      SELECT e.name AS company,
+             ROUND(AVG(s.hourly_rate), 2) AS avg_hourly,
+             COUNT(*) AS n_reports
+      FROM Employer e
+      JOIN JobPosting j ON j.employer_id = e.employer_id
+      JOIN Salary     s ON s.job_id       = j.job_id
+      WHERE j.title = %s
+      GROUP BY e.name
+      ORDER BY avg_hourly DESC, n_reports DESC
+      LIMIT 20;
+    """, (role,))
+    rows = cur.fetchall()
+    cur.close(); db.close()
+    return render_template("top_companies.html", rows=rows, role=role)
+  else:
+    cur.execute("SELECT DISTINCT title FROM JobPosting ORDER BY title;")
+    roles = [row["title"] for row in cur.fetchall()]
+    cur.close(); db.close()
+    return render_template("select_role.html", roles=roles)
+
 # Feature: Average Salary by Term (R9)
 @app.get("/avg-by-term")
 def avg_by_term():
