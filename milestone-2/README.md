@@ -1,12 +1,12 @@
 <h1 align="center">Waterloo Co-op Salaries Explorer</h1>
 
 <p align="center">
-  Milestone 1: Proposal <br />
-  October 21, 2025
+  Milestone 2: Proposal <br />
+  November 14, 2025
 </p>
 
 <p align="center">
-  <a href="#"><img alt="Status" src="https://img.shields.io/badge/status-M1_ready-4CAF50.svg"></a>
+  <a href="#"><img alt="Status" src="https://img.shields.io/badge/status-M2_ready-4CAF50.svg"></a>
   <a href="#"><img alt="Database" src="https://img.shields.io/badge/db-MySQL_8+-blue.svg"></a>
   <a href="#"><img alt="API" src="https://img.shields.io/badge/api-Flask-ff6f61.svg"></a>
 </p>
@@ -133,6 +133,7 @@ Visit http://127.0.0.1:5000.
 
 #### Feature: Average Salary by Term (R9)
 <img width="1477" height="472" alt="Screenshot 2025-10-19 at 3 57 16 AM" src="https://github.com/user-attachments/assets/0f1bc9ec-50f0-465f-92dc-1fea2902c4fe" />
+
 
 
 
