@@ -1,0 +1,92 @@
+-- Feature 1: Keyword-Based Job Search (q = 'Software')
++--------------------------+------------+--------------+-------------+-------------+
+| title                    | employer   | location     | term        | hourly_rate |
++--------------------------+------------+--------------+-------------+-------------+
+| Software Engineer Intern | Google     | Waterloo, ON | Winter 2025 |       45.00 |
+| Software Engineer Intern | Microsoft  | Toronto, ON  | Winter 2025 |       50.00 |
+| Software Developer Co-op | Shopify    | Ottawa, ON   | Fall 2025   |       42.00 |
+| Software Engineer Intern | Amazon     | Vancouver, BC| Summer 2025 |       47.00 |
+| Software Engineer Intern | NVIDIA     | Toronto, ON  | Winter 2026 |       55.00 |
+| Software Developer Intern| IBM        | Markham, ON  | Fall 2025   |       40.00 |
+| Software Engineer Intern | Citadel    | Chicago, IL  | Summer 2025 |       80.00 |
+| Software Engineer Intern | Jane Street| New York, NY | Winter 2025 |       75.00 |
+| Software Engineer Intern | Databricks | Toronto, ON  | Summer 2025 |       70.00 |
+| Software Developer Co-op | Salesforce | Toronto, ON  | Fall 2025   |       45.00 |
++--------------------------+------------+--------------+-------------+-------------+
+
+-- Feature 2: Top-Paying Companies by Given Role ('Software Engineer Intern')
++---------------------+------------+-----------+
+| company             | avg_hourly | n_reports |
++---------------------+------------+-----------+
+| Citadel             |      80.00 |       120 |
+| Jane Street         |      75.00 |       100 |
+| Hudson River Trading|      72.00 |        80 |
+| Databricks          |      70.00 |       150 |
+| Palantir            |      68.00 |       130 |
+| NVIDIA              |      65.00 |       200 |
+| Tesla               |      62.00 |       160 |
+| Google              |      60.00 |       300 |
+| Meta                |      58.00 |       250 |
+| Apple               |      56.00 |       180 |
+| Microsoft           |      54.00 |       220 |
+| Amazon              |      52.00 |       240 |
+| Uber                |      50.00 |       140 |
+| Lyft                |      48.00 |       110 |
+| Snowflake           |      46.00 |       170 |
+| Salesforce          |      44.00 |       190 |
+| IBM                 |      42.00 |       210 |
+| Cisco               |      40.00 |       150 |
+| Oracle              |      38.00 |       130 |
+| Intel               |      36.00 |       100 |
++---------------------+------------+-----------+
+
+
+-- Feature 3: Average Salary by Faculty / Program
++------------+------------------------------------+------------------+-------------+
+| faculty    | program                            | avg_hourly_rate  | n_placements|
++------------+------------------------------------+------------------+-------------+
+| Engineering| Computer Science                   |            55.20 |        1500 |
+| Engineering| Electrical and Computer Science    |            53.80 |        1200 |
+| Engineering| Computer Science and Engineering   |            52.50 |         900 |
+| Engineering| Biomedical and Computer Science    |            51.10 |         800 |
+| Engineering| Computer Science (AI Option)       |            50.40 |         700 |
+| Engineering| Mechatronics and Computer Science  |            49.70 |         600 |
+| Engineering| Computer Science and Business      |            48.90 |         500 |
+| Engineering| Nanotechnology and Computer Science|            47.60 |         400 |
+| Engineering| Computer Science (Co-op)           |            46.30 |         300 |
+| Engineering| Systems Design and Computer Science|            45.00 |         200 |
++------------+------------------------------------+------------------+-------------+
+
+
+-- Feature 4: Average Hourly Salary by Term
++-------------+------------+-----------+
+| term        | avg_hourly | n_reports |
++-------------+------------+-----------+
+| Fall 2025   |      48.75 |      2500 |
+| Fall 2026   |      50.20 |      2200 |
+| Spring 2025 |      49.50 |      2300 |
+| Spring 2026 |      51.00 |      2000 |
+| Summer 2025 |      52.10 |      2400 |
+| Summer 2026 |      53.50 |      2100 |
+| Winter 2025 |      50.45 |      2800 |
+| Winter 2026 |      51.80 |      2600 |
+| Fall 2027   |      52.30 |      1800 |
+| Spring 2027 |      53.00 |      1900 |
++-------------+------------+-----------+
+
+
+-- Feature 5: View Blacklisted Employers
++----------------+----------------------------------------+------------+
+| employer_name  | reason                                 | date_added |
++----------------+----------------------------------------+------------+
+| Scam Co        | Rescinded offers last minute           | 2025-11-14 |
+| Scam Co        | Toxic work environment reported        | 2025-11-14 |
+| Risky Startup  | Repeatedly failed to pay students      | 2025-11-14 |
+| BadCorp        | Very low pay and poor conditions       | 2025-11-14 |
+| LowPay Inc     | Below market rates                     | 2025-11-14 |
+| Amazon         | High pressure environment              | 2025-11-14 |
+| Lyft           | Low benefits                           | 2025-11-14 |
+| Palantir       | Ethical concerns                       | 2025-11-14 |
+| Hudson River Trading | Intense interviews and culture   | 2025-11-14 |
+| Budget Tech    | No growth opportunities                | 2025-11-14 |
++----------------+----------------------------------------+------------+
