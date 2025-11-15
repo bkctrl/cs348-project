@@ -31,6 +31,28 @@ You can confirm correct population by:
 mysql -u root -p coop_salaries -e "SELECT * FROM Employer;"
 ```
 
+## How to Generate and Load the Production Dataset
+
+To generate the production dataset, we aggregate real-world co-op salary reports from multiple public sources, clean and normalize them, and supplement with synthetic data to support student/faculty queries.
+
+1. **Download source CSVs**:
+  - Waterloo Co-op Salaries + Blacklist:  
+    https://docs.google.com/spreadsheets/d/1OEDRTAalRsyD1iAO5fkp_8HUJUxbYTavotHhwX0AwBU
+  - Kaggle Internship Opportunities:  
+    Manually download from [kaggle.com/datasets/everydaycodings/internship-opportunities-dataset](https://www.kaggle.com/datasets/everydaycodings/internship-opportunities-dataset)
+  - levels.fyi Internships (2025–2026):  
+    Manually export table from [levels.fyi/internships](https://www.levels.fyi/internships/?track=Software%20Engineer&timeframe=2026%20%2F%202025) to CSV
+
+2. **Run the transformation script**:
+```bash
+python data_transform.py --input waterloo.csv kaggle.csv levels_fyi.csv
+```
+
+3.  **Verify production data**:
+```bash
+mysql -u root -p coop_salaries < milestone-2/test-production.sql > milestone-2/test-production.out
+```
+
 ## 📌 Implemented Features (`app/app.py`)
 
 #### 1. Keyword Search (R6)
