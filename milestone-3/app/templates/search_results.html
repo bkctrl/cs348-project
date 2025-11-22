@@ -14,19 +14,20 @@
       <div class="card-body">
         <form action="/advanced-search" method="get" class="row g-2">
           <div class="col-md-8">
-            <input type="text" class="form-control" name="q" value="{{ request.args.get('q', '') }}" placeholder="Enter search keywords...">
+            <input type="text" class="form-control" name="q" value="{{ request.args.get('q', '') or '' }}" placeholder="Enter search keywords (e.g., software engineer, Toronto)">
           </div>
           <div class="col-md-4">
             <button type="submit" class="btn btn-primary w-100">Search</button>
           </div>
         </form>
+        <small class="text-muted">Uses MySQL full-text search for relevance-based results</small>
       </div>
     </div>
 
     {% if jobs|length > 0 %}
       <div class="card">
-        <div class="card-header">
-          <h5 class="mb-0">{{ jobs|length }} Relevant Results (sorted by relevance)</h5>
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">✓ {{ jobs|length }} Results Found (sorted by relevance)</h5>
         </div>
         <div class="table-responsive">
           <table class="table table-hover mb-0">

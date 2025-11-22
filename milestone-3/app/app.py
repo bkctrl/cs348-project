@@ -223,23 +223,33 @@ def advanced_search():
     if not keyword:
         return render_template("search_results.html", jobs=[])
     
-    db = get_db(); cur = db.cursor()
+    db = get_db()
+    cur = db.cursor()
+    
+    # Use individual MATCH queries for each indexed column
     cur.execute("""
-        SELECT j.title, 
+        SELECT DISTINCT j.title, 
                e.name AS employer, 
                j.location, 
                s.hourly_rate,
-               MATCH(j.title) AGAINST(%s IN NATURAL LANGUAGE MODE) AS title_relevance,
-               MATCH(e.name, j.location) AGAINST(%s IN NATURAL LANGUAGE MODE) AS other_relevance
+               (MATCH(j.title) AGAINST(%s IN NATURAL LANGUAGE MODE) * 2.0 +
+                COALESCE(MATCH(j.location) AGAINST(%s IN NATURAL LANGUAGE MODE), 0) +
+                MATCH(e.name) AGAINST(%s IN NATURAL LANGUAGE MODE)) AS relevance_score
         FROM JobPosting j
         JOIN Employer e ON j.employer_id = e.employer_id
         JOIN Salary s ON j.job_id = s.job_id
-        WHERE MATCH(j.title, e.name, j.location) AGAINST(%s IN NATURAL LANGUAGE MODE)
-        ORDER BY (title_relevance * 2.0) + other_relevance DESC
-    """, (keyword, keyword, keyword))
+        WHERE MATCH(j.title) AGAINST(%s IN NATURAL LANGUAGE MODE)
+           OR MATCH(j.location) AGAINST(%s IN NATURAL LANGUAGE MODE)
+           OR MATCH(e.name) AGAINST(%s IN NATURAL LANGUAGE MODE)
+        ORDER BY relevance_score DESC, s.hourly_rate DESC
+    """, (keyword, keyword, keyword, keyword, keyword, keyword))
+    
     rows = [{"title": r[0], "employer": r[1], "location": r[2], "hourly_rate": r[3]} 
             for r in cur.fetchall()]
-    cur.close(); db.close()
+    
+    cur.close()
+    db.close()
+    
     return render_template("search_results.html", jobs=rows)
 
 
