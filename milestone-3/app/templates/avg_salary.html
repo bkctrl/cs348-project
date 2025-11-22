@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Average Salary by Faculty / Program</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+    <h1 class="text-center mb-4">Average Salary by Faculty / Program</h1>
+
+    <!-- Filters -->
+    <form method="get" class="row g-2 mb-3">
+      <div class="col-md-4">
+        <input type="text" name="faculty" class="form-control"
+               placeholder="Faculty (e.g. Engineering)"
+               value="{{ faculty or '' }}">
+      </div>
+      <div class="col-md-4">
+        <input type="text" name="program_kw" class="form-control"
+               placeholder="Program contains (e.g. Computer Science)"
+               value="{{ program_kw or '' }}">
+      </div>
+      <div class="col-md-3">
+        <input type="text" name="term" class="form-control"
+               placeholder="Term (e.g. Winter 2025)"
+               value="{{ term or '' }}">
+      </div>
+      <div class="col-md-1 d-grid">
+        <button type="submit" class="btn btn-primary">Go</button>
+      </div>
+    </form>
+
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Aggregated Results</h5>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Faculty</th>
+              <th>Program</th>
+              <th class="text-end">Avg Hourly ($)</th>
+              <th class="text-end"># Placements</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+              <tr>
+                <td>#{{ loop.index }}</td>
+                <td>{{ r.faculty }}</td>
+                <td>{{ r.program }}</td>
+                <td class="text-end">
+                  <span class="badge bg-success">
+                    {{ "%.2f"|format(r.avg_hourly_rate) }}
+                  </span>
+                </td>
+                <td class="text-end">{{ r.n_placements }}</td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-center text-muted py-3">
+                  No matching records.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="text-center mt-4">
+      <a href="/" class="btn btn-secondary">Back to Home</a>
+    </div>
+  </div>
+</body>
+</html>
