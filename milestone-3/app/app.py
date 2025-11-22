@@ -216,6 +216,63 @@ def view_blacklist():
   cur.close(); db.close()
   return render_template("blacklist.html", reports=rows)
 
+# Feature: Full-Text Relevance Search (R11)
+@app.get("/advanced-search")
+def advanced_search():
+    keyword = request.args.get("q", "")
+    if not keyword:
+        return render_template("search_results.html", jobs=[])
+    
+    db = get_db(); cur = db.cursor()
+    cur.execute("""
+        SELECT j.title, 
+               e.name AS employer, 
+               j.location, 
+               s.hourly_rate,
+               MATCH(j.title) AGAINST(%s IN NATURAL LANGUAGE MODE) AS title_relevance,
+               MATCH(e.name, j.location) AGAINST(%s IN NATURAL LANGUAGE MODE) AS other_relevance
+        FROM JobPosting j
+        JOIN Employer e ON j.employer_id = e.employer_id
+        JOIN Salary s ON j.job_id = s.job_id
+        WHERE MATCH(j.title, e.name, j.location) AGAINST(%s IN NATURAL LANGUAGE MODE)
+        ORDER BY (title_relevance * 2.0) + other_relevance DESC
+    """, (keyword, keyword, keyword))
+    rows = [{"title": r[0], "employer": r[1], "location": r[2], "hourly_rate": r[3]} 
+            for r in cur.fetchall()]
+    cur.close(); db.close()
+    return render_template("search_results.html", jobs=rows)
+
+
+# Feature: Add Blacklist Entry (Transactional) (R12)
+@app.post("/admin/blacklist-add")
+def add_blacklist_entry():
+    employer_id = request.form.get("employer_id")
+    reason = request.form.get("reason")
+    admin_user = "admin@system.com"  # From session in production
+    
+    db = get_db(); cur = db.cursor()
+    try:
+        db.start_transaction()
+        
+        # Insert blacklist record
+        cur.execute("""
+            INSERT INTO Blacklist (employer_id, reason, date_added, added_by)
+            VALUES (%s, %s, CURDATE(), %s)
+        """, (employer_id, reason, admin_user))
+        
+        # Update employer flag
+        cur.execute("""
+            UPDATE Employer SET blacklist_flag = TRUE
+            WHERE employer_id = %s
+        """, (employer_id,))
+        
+        db.commit()
+        return "Employer blacklisted successfully.", 200
+    except Exception as err:
+        db.rollback()
+        return f"Error: Could not add blacklist entry. Data has been rolled back.", 500
+    finally:
+        cur.close(); db.close()
 
 if __name__ == "__main__":
   app.run(debug=True)
