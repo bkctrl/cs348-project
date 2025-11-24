@@ -284,5 +284,85 @@ def add_blacklist_entry():
     finally:
         cur.close(); db.close()
 
+# Feature: Salary Percentiles and Bands (R15)
+@app.get("/salary-bands")
+def salary_bands():
+  title = (request.args.get("title", "") or "").strip()
+  city  = (request.args.get("city", "") or "").strip()
+  term  = (request.args.get("term", "") or "").strip()
+
+  filters, params = [], []
+
+  if title:
+    filters.append("j.title = %s")
+    params.append(title)
+
+  if city:
+    filters.append("j.location = %s")
+    params.append(city)
+
+  if term:
+    filters.append("j.term = %s")
+    params.append(term)
+
+  where_clause = " AND ".join(filters) if filters else "1=1"
+
+  query = f"""
+    WITH filtered AS (
+      SELECT
+        j.title,
+        j.location,
+        j.term,
+        e.name AS employer,
+        s.hourly_rate
+      FROM JobPosting j
+      JOIN Employer e ON j.employer_id = e.employer_id
+      JOIN Salary   s ON j.job_id      = s.job_id
+      WHERE {where_clause}
+        AND s.hourly_rate IS NOT NULL
+    ),
+    ranked AS (
+      SELECT
+        employer,
+        title,
+        location,
+        term,
+        hourly_rate,
+        PERCENT_RANK() OVER (
+          PARTITION BY title, location, term
+          ORDER BY hourly_rate
+        ) AS pct_rank,
+        NTILE(10) OVER (
+          PARTITION BY title, location, term
+          ORDER BY hourly_rate
+        ) AS decile
+      FROM filtered
+    )
+    SELECT
+      employer,
+      title,
+      location,
+      term,
+      hourly_rate,
+      ROUND(pct_rank, 2) AS pct_rank,
+      decile
+    FROM ranked
+    ORDER BY hourly_rate;
+  """
+
+  db = get_db()
+  cur = db.cursor(dictionary=True)
+  cur.execute(query, params)
+  rows = cur.fetchall()
+  cur.close(); db.close()
+
+  return render_template(
+    "salary_bands.html",
+    rows=rows,
+    title=title,
+    city=city,
+    term=term,
+  )
+
 if __name__ == "__main__":
   app.run(debug=True)
