@@ -226,23 +226,38 @@ def advanced_search():
     db = get_db()
     cur = db.cursor()
     
-    # Use individual MATCH queries for each indexed column
+    # Simplified query with proper FULLTEXT usage
     cur.execute("""
         SELECT DISTINCT j.title, 
                e.name AS employer, 
                j.location, 
                s.hourly_rate,
-               (MATCH(j.title) AGAINST(%s IN NATURAL LANGUAGE MODE) * 2.0 +
-                COALESCE(MATCH(j.location) AGAINST(%s IN NATURAL LANGUAGE MODE), 0) +
-                MATCH(e.name) AGAINST(%s IN NATURAL LANGUAGE MODE)) AS relevance_score
+               (
+                 CASE 
+                   WHEN MATCH(j.title) AGAINST(%s IN NATURAL LANGUAGE MODE) > 0 
+                   THEN MATCH(j.title) AGAINST(%s IN NATURAL LANGUAGE MODE) * 2.0
+                   ELSE 0
+                 END +
+                 CASE 
+                   WHEN MATCH(j.location) AGAINST(%s IN NATURAL LANGUAGE MODE) > 0 
+                   THEN MATCH(j.location) AGAINST(%s IN NATURAL LANGUAGE MODE)
+                   ELSE 0
+                 END +
+                 CASE 
+                   WHEN MATCH(e.name) AGAINST(%s IN NATURAL LANGUAGE MODE) > 0 
+                   THEN MATCH(e.name) AGAINST(%s IN NATURAL LANGUAGE MODE)
+                   ELSE 0
+                 END
+               ) AS relevance_score
         FROM JobPosting j
         JOIN Employer e ON j.employer_id = e.employer_id
         JOIN Salary s ON j.job_id = s.job_id
         WHERE MATCH(j.title) AGAINST(%s IN NATURAL LANGUAGE MODE)
            OR MATCH(j.location) AGAINST(%s IN NATURAL LANGUAGE MODE)
            OR MATCH(e.name) AGAINST(%s IN NATURAL LANGUAGE MODE)
+        HAVING relevance_score > 0
         ORDER BY relevance_score DESC, s.hourly_rate DESC
-    """, (keyword, keyword, keyword, keyword, keyword, keyword))
+    """, (keyword, keyword, keyword, keyword, keyword, keyword, keyword, keyword, keyword))
     
     rows = [{"title": r[0], "employer": r[1], "location": r[2], "hourly_rate": r[3]} 
             for r in cur.fetchall()]

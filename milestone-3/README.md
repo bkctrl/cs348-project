@@ -17,18 +17,18 @@
 
 Create database and schema:
 ```bash
-mysql -u root -p < milestone-1/create-tables.sql
+sudo mysql cs348 < create-tables.sql
 ```
 
 Insert sample data and verify (test dataset from C3):
 ```bash
-mysql -u root -p < milestone-1/test-sample.sql
+sudo mysql cs348 < test-sample.sql
 ```
 
 You can confirm correct population by:
 
 ```bash
-mysql -u root -p coop_salaries -e "SELECT * FROM Employer;"
+sudo mysql cs348 -e "SELECT * FROM Employer;"
 ```
 
 ## How to Generate and Load the Production Dataset

@@ -21,8 +21,7 @@ CREATE TABLE Employer (
     employer_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     blacklist_flag BOOLEAN DEFAULT FALSE,
-    CHECK (name <> ''),
-    FULLTEXT INDEX ft_employer_name (name)
+    CHECK (name <> '')
 ) ENGINE=InnoDB;
 
 -- ------------------------------
@@ -38,10 +37,7 @@ CREATE TABLE JobPosting (
         REFERENCES Employer(employer_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-    CHECK (title <> ''),
-    FULLTEXT INDEX ft_job_title (title),
-    FULLTEXT INDEX ft_job_location (location),
-    FULLTEXT INDEX ft_job_combined (title, location)
+    CHECK (title <> '')
 ) ENGINE=InnoDB;
 
 -- ------------------------------
@@ -106,6 +102,13 @@ CREATE TABLE Placement (
         ON DELETE CASCADE
         ON UPDATE CASCADE
 ) ENGINE=InnoDB;
+
+-- =====================================
+-- Add FULLTEXT Indexes AFTER table creation
+-- =====================================
+ALTER TABLE Employer ADD FULLTEXT INDEX ft_employer_name (name);
+ALTER TABLE JobPosting ADD FULLTEXT INDEX ft_job_title (title);
+ALTER TABLE JobPosting ADD FULLTEXT INDEX ft_job_location (location);
 
 -- =====================================
 -- Example Stored Procedure
