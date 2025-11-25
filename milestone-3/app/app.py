@@ -267,7 +267,6 @@ def advanced_search():
     
     return render_template("search_results.html", jobs=rows)
 
-
 # Feature: Add Blacklist Entry (Transactional) (R12)
 @app.post("/admin/blacklist-add")
 def add_blacklist_entry():
@@ -298,6 +297,40 @@ def add_blacklist_entry():
         return f"Error: Could not add blacklist entry. Data has been rolled back.", 500
     finally:
         cur.close(); db.close()
+
+'''
+#test code to force a failure and verify rollback
+#curl -X POST http://127.0.0.1:5000/admin/blacklist-add   -d "employer_id=1"   -d "reason=Failed to pay interns2"
+@app.post("/admin/blacklist-add")
+def add_blacklist_entry():
+    employer_id = request.form.get("employer_id")
+    reason = request.form.get("reason")
+    admin_user = "admin@system.com"
+    
+    db = get_db(); cur = db.cursor()
+    try:
+        db.start_transaction()
+        
+        cur.execute("""
+            INSERT INTO Blacklist (employer_id, reason, date_added, added_by)
+            VALUES (%s, %s, CURDATE(), %s)
+        """, (employer_id, reason, admin_user))
+        
+        # FORCE FAILURE HERE
+        cur.execute("""
+            UPDATE NonExistentTable SET blacklist_flag = TRUE
+            WHERE employer_id = %s
+        """, (employer_id,))
+        
+        db.commit()
+        return "Employer blacklisted successfully.", 200
+    except Exception as err:
+        db.rollback()
+        return f"Error: Could not add blacklist entry. Data has been rolled back.", 500
+    finally:
+        cur.close(); db.close()
+'''
+        
 
 # Feature: Salary Percentiles and Bands (R15)
 @app.get("/salary-bands")
