@@ -331,6 +331,69 @@ def add_blacklist_entry():
         cur.close(); db.close()
 '''
         
+# Feature: Safe Employer Recommendations by Faculty (R13)
+@app.route("/safe-employers")
+def safe_employers():
+    faculty = request.args.get("faculty", "").strip()
+
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    query = """
+      WITH faculty_avg AS (
+        SELECT s.faculty, AVG(sa.hourly_rate) AS faculty_avg_rate
+        FROM Placement p
+        JOIN Student s ON p.student_id = s.student_id
+        JOIN Salary  sa ON sa.job_id = p.job_id
+        GROUP BY s.faculty
+      ),
+      employer_faculty_stats AS (
+        SELECT
+          e.employer_id,
+          e.name AS employer,
+          s.faculty,
+          AVG(sa.hourly_rate) AS employer_avg_rate,
+          COUNT(*) AS n_placements
+        FROM Placement p
+        JOIN Student   s ON p.student_id = s.student_id
+        JOIN Salary   sa ON sa.job_id = p.job_id
+        JOIN JobPosting j ON j.job_id = p.job_id
+        JOIN Employer  e ON e.employer_id = j.employer_id
+        GROUP BY e.employer_id, e.name, s.faculty
+      )
+      SELECT
+        efs.employer,
+        efs.faculty,
+        ROUND(efs.employer_avg_rate, 2) AS avg_hourly_rate,
+        efs.n_placements
+      FROM employer_faculty_stats efs
+      JOIN faculty_avg fa
+        ON fa.faculty = efs.faculty
+      JOIN Employer e
+        ON e.employer_id = efs.employer_id
+      WHERE (%s = '' OR efs.faculty = %s)
+        AND e.blacklist_flag = FALSE
+        AND efs.n_placements >= 2
+        AND NOT EXISTS (
+          SELECT 1
+          FROM Placement p2
+          JOIN Student  s2 ON p2.student_id = s2.student_id
+          JOIN Salary  sa2 ON sa2.job_id = p2.job_id
+          JOIN JobPosting j2 ON j2.job_id = p2.job_id
+          WHERE s2.faculty = efs.faculty
+            AND j2.employer_id = efs.employer_id
+            AND sa2.hourly_rate < 0.7 * fa.faculty_avg_rate
+        )
+      ORDER BY avg_hourly_rate DESC, n_placements DESC;
+    """
+
+    cur.execute(query, (faculty, faculty))
+    rows = cur.fetchall()
+    cur.close(); conn.close()
+
+    return render_template("safe_employers.html",
+                           rows=rows, faculty=faculty)
+
 
 # Feature: Salary Percentiles and Bands (R15)
 @app.get("/salary-bands")
