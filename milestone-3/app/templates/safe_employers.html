@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Safe Employers</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+  <div class="container py-4">
+    <h1 class="mb-4 text-center">Safe Employers by Faculty</h1>
+
+    <form class="row g-3 mb-4" method="get" action="/safe-employers">
+      <div class="col-auto">
+        <input type="text" name="faculty" class="form-control"
+               placeholder="Enter faculty (e.g. Engineering)"
+               value="{{ faculty }}">
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary" type="submit">Search</button>
+      </div>
+    </form>
+
+    <div class="card">
+      <div class="card-header">
+        <strong>Recommended Employers</strong>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Employer</th>
+              <th>Faculty</th>
+              <th>Avg Hourly Rate</th>
+              <th>#Placements</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% if rows %}
+              {% for r in rows %}
+                <tr>
+                  <td>{{ r.employer }}</td>
+                  <td>{{ r.faculty }}</td>
+                  <td>${{ r.avg_hourly_rate }}</td>
+                  <td>{{ r.n_placements }}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="4" class="text-center text-muted py-3">
+                  No safe employers found for this faculty.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="text-center mt-4">
+      <a href="/" class="btn btn-secondary">Back to home</a>
+    </div>
+  </div>
+</body>
+</html>
