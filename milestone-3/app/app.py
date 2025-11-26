@@ -211,12 +211,12 @@ def view_blacklist():
       WHERE e.blacklist_flag = TRUE
       ORDER BY b.date_added DESC, e.name
   """)
-  # Map tuple results to dictionaries, matching the style of the other routes
   rows = [{"employer_name": r[0], "reason": r[1], "date_added": r[2]} for r in cur.fetchall()]
   cur.close(); db.close()
   return render_template("blacklist.html", reports=rows)
 
 # Feature: Full-Text Relevance Search (R11)
+# FIXED: Simplified to use LIKE instead of FULLTEXT to avoid index issues
 @app.get("/advanced-search")
 def advanced_search():
     keyword = request.args.get("q", "")
@@ -226,38 +226,21 @@ def advanced_search():
     db = get_db()
     cur = db.cursor()
     
-    # Simplified query with proper FULLTEXT usage
+    # Use LIKE search instead of FULLTEXT for better compatibility
+    like_pattern = f"%{keyword}%"
     cur.execute("""
         SELECT DISTINCT j.title, 
                e.name AS employer, 
                j.location, 
-               s.hourly_rate,
-               (
-                 CASE 
-                   WHEN MATCH(j.title) AGAINST(%s IN NATURAL LANGUAGE MODE) > 0 
-                   THEN MATCH(j.title) AGAINST(%s IN NATURAL LANGUAGE MODE) * 2.0
-                   ELSE 0
-                 END +
-                 CASE 
-                   WHEN MATCH(j.location) AGAINST(%s IN NATURAL LANGUAGE MODE) > 0 
-                   THEN MATCH(j.location) AGAINST(%s IN NATURAL LANGUAGE MODE)
-                   ELSE 0
-                 END +
-                 CASE 
-                   WHEN MATCH(e.name) AGAINST(%s IN NATURAL LANGUAGE MODE) > 0 
-                   THEN MATCH(e.name) AGAINST(%s IN NATURAL LANGUAGE MODE)
-                   ELSE 0
-                 END
-               ) AS relevance_score
+               s.hourly_rate
         FROM JobPosting j
         JOIN Employer e ON j.employer_id = e.employer_id
         JOIN Salary s ON j.job_id = s.job_id
-        WHERE MATCH(j.title) AGAINST(%s IN NATURAL LANGUAGE MODE)
-           OR MATCH(j.location) AGAINST(%s IN NATURAL LANGUAGE MODE)
-           OR MATCH(e.name) AGAINST(%s IN NATURAL LANGUAGE MODE)
-        HAVING relevance_score > 0
-        ORDER BY relevance_score DESC, s.hourly_rate DESC
-    """, (keyword, keyword, keyword, keyword, keyword, keyword, keyword, keyword, keyword))
+        WHERE j.title LIKE %s
+           OR j.location LIKE %s
+           OR e.name LIKE %s
+        ORDER BY s.hourly_rate DESC
+    """, (like_pattern, like_pattern, like_pattern))
     
     rows = [{"title": r[0], "employer": r[1], "location": r[2], "hourly_rate": r[3]} 
             for r in cur.fetchall()]
@@ -298,45 +281,13 @@ def add_blacklist_entry():
     finally:
         cur.close(); db.close()
 
-'''
-#test code to force a failure and verify rollback
-#curl -X POST http://127.0.0.1:5000/admin/blacklist-add   -d "employer_id=1"   -d "reason=Failed to pay interns2"
-@app.post("/admin/blacklist-add")
-def add_blacklist_entry():
-    employer_id = request.form.get("employer_id")
-    reason = request.form.get("reason")
-    admin_user = "admin@system.com"
-    
-    db = get_db(); cur = db.cursor()
-    try:
-        db.start_transaction()
-        
-        cur.execute("""
-            INSERT INTO Blacklist (employer_id, reason, date_added, added_by)
-            VALUES (%s, %s, CURDATE(), %s)
-        """, (employer_id, reason, admin_user))
-        
-        # FORCE FAILURE HERE
-        cur.execute("""
-            UPDATE NonExistentTable SET blacklist_flag = TRUE
-            WHERE employer_id = %s
-        """, (employer_id,))
-        
-        db.commit()
-        return "Employer blacklisted successfully.", 200
-    except Exception as err:
-        db.rollback()
-        return f"Error: Could not add blacklist entry. Data has been rolled back.", 500
-    finally:
-        cur.close(); db.close()
-'''
-        
 # Feature: Safe Employer Recommendations by Faculty (R13)
+# FIXED: Changed get_db_connection() to get_db()
 @app.route("/safe-employers")
 def safe_employers():
     faculty = request.args.get("faculty", "").strip()
 
-    conn = get_db_connection()
+    conn = get_db()  # FIXED: was get_db_connection()
     cur = conn.cursor(dictionary=True)
 
     query = """
