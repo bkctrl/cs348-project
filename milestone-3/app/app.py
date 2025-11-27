@@ -345,6 +345,41 @@ def safe_employers():
     return render_template("safe_employers.html",
                            rows=rows, faculty=faculty)
 
+# Feature: Auto-Flagging Low-Paying Employers (R14)
+@app.route("/admin/add-salary", methods=["POST"])
+def add_salary():
+
+  job_id = request.form.get("job_id")
+  hourly_rate = float(request.form.get("hourly_rate"))
+  hours_per_week = int(request.form.get("hours_per_week"))
+  notes = request.form.get("notes")
+  admin_user = "admin@system.com"  # From session in production
+  
+  conn = get_db()
+  cursor = conn.cursor()
+  
+  try:
+    conn.start_transaction()
+    
+    cursor.execute("""
+        INSERT INTO Salary (job_id, hourly_rate, hours_per_week, notes)
+        VALUES (%s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+        hourly_rate = VALUES(hourly_rate),
+        hours_per_week = VALUES(hours_per_week),
+        notes = VALUES(notes)
+    """, (job_id, hourly_rate, hours_per_week, notes))
+    
+    conn.commit()
+  
+  except mysql.connector.Error as err:
+    conn.rollback()
+    return "Error: Could not insert/update salary. Data has been rolled back.", 500
+  finally:
+    conn.close()
+  
+  return "Salary added/updated successfully.", 200
+
 
 # Feature: Salary Percentiles and Bands (R15)
 @app.get("/salary-bands")

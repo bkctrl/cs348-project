@@ -147,6 +147,73 @@ END$$
 
 DELIMITER ;
 
+DELIMITER $$
+-- =====================================
+-- Trigger: Compute average pay across all jobs of an employer after Salary INSERT; conditionally blacklist employer
+-- =====================================
+CREATE TRIGGER auto_flag_low_pay AFTER INSERT ON Salary
+FOR EACH ROW
+BEGIN
+DECLARE emp_id INT;
+DECLARE avg_rate DECIMAL(6,2);
+
+-- Get employer_id from JobPosting table
+SELECT employer_id INTO emp_id
+FROM JobPosting
+WHERE job_id = NEW.job_id;
+
+-- Compute the employer’s new average rate across all their jobs
+SELECT AVG(hourly_rate) INTO avg_rate
+FROM Salary s
+JOIN JobPosting j ON s.job_id = j.job_id
+WHERE j.employer_id = emp_id;
+
+-- If new average rate < $20/hour, flag and add a blacklist entry
+IF avg_rate < 20.00 THEN
+UPDATE Employer
+SET blacklist_flag = TRUE
+WHERE employer_id = emp_id;
+
+-- Insert default reason into Blacklist table
+INSERT INTO Blacklist (employer_id, reason, date_added, added_by)
+VALUES (emp_id, 'Auto-flagged for low average pay', CURDATE(), 'admin@system.com');
+END IF;
+
+-- =====================================
+-- Trigger: Compute average pay across all jobs of an employer after Salary UPDATE; conditionally blacklist employer
+-- =====================================
+CREATE TRIGGER auto_flag_low_pay AFTER UPDATE ON Salary
+FOR EACH ROW
+BEGIN
+DECLARE emp_id INT;
+DECLARE avg_rate DECIMAL(6,2);
+
+-- Get employer_id from JobPosting table
+SELECT employer_id INTO emp_id
+FROM JobPosting
+WHERE job_id = NEW.job_id;
+
+-- Compute the employer’s new average rate across all their jobs
+SELECT AVG(hourly_rate) INTO avg_rate
+FROM Salary s
+JOIN JobPosting j ON s.job_id = j.job_id
+WHERE j.employer_id = emp_id;
+
+-- If new average rate < $20/hour, flag and add a blacklist entry
+IF avg_rate < 20.00 THEN
+UPDATE Employer
+SET blacklist_flag = TRUE
+WHERE employer_id = emp_id;
+
+-- Insert default reason into Blacklist table
+INSERT INTO Blacklist (employer_id, reason, date_added, added_by)
+VALUES (emp_id, 'Auto-flagged for low average pay', CURDATE(), 'admin@system.com');
+END IF;
+
+END$$
+DELIMITER;
+
+
 -- =====================================
 -- Sample Data
 -- =====================================
