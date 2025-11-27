@@ -40,17 +40,16 @@ To generate the production dataset, we aggregate real-world co-op salary reports
     https://docs.google.com/spreadsheets/d/1OEDRTAalRsyD1iAO5fkp_8HUJUxbYTavotHhwX0AwBU
   - Kaggle Internship Opportunities:  
     Manually download from [kaggle.com/datasets/everydaycodings/internship-opportunities-dataset](https://www.kaggle.com/datasets/everydaycodings/internship-opportunities-dataset)
-  - levels.fyi Internships (2025–2026):  
-    Manually export table from [levels.fyi/internships](https://www.levels.fyi/internships/?track=Software%20Engineer&timeframe=2026%20%2F%202025) to CSV
 
 2. **Run the transformation script**:
 ```bash
-python data_transform.py --input waterloo.csv kaggle.csv levels_fyi.csv
+python data_transform.py
 ```
 
 3.  **Verify production data**:
 ```bash
-mysql -u root -p coop_salaries < milestone-2/test-production.sql > milestone-2/test-production.out
+# Compare output to milestone-3/test-production.out
+sudo mysql cs348 < milestone-3/test-production.sql
 ```
 
 ## 📌 Implemented Features (`app/app.py`)
