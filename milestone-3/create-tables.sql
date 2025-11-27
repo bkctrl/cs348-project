@@ -13,6 +13,8 @@ DROP TABLE IF EXISTS Employer;
 -- Drop existing procedures and triggers
 DROP PROCEDURE IF EXISTS AddToBlacklist;
 DROP TRIGGER IF EXISTS UpdateBlacklistFlag;
+DROP TRIGGER IF EXISTS auto_flag_low_pay;
+DROP TRIGGER IF EXISTS auto_flag_low_pay_2;
 
 -- ------------------------------
 -- Employer Table
