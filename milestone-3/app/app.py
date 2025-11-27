@@ -459,5 +459,66 @@ def salary_bands():
     term=term,
   )
 
+@app.route("/admin/blacklist-add", methods=["POST"])
+def admin_blacklist_add():
+  """Add an employer to the blacklist"""
+  employer_id = request.form.get("employer_id")
+  reason = request.form.get("reason", "No reason provided")
+  
+  if not employer_id:
+    return "Missing employer_id", 400
+  
+  db = get_db()
+  cur = db.cursor()
+  
+  # Insert blacklist record
+  cur.execute("""
+    INSERT INTO Blacklist (employer_id, reason, date_added, added_by)
+    VALUES (%s, %s, CURDATE(), 'admin')
+  """, (employer_id, reason))
+  
+  # Update employer blacklist flag
+  cur.execute("""
+    UPDATE Employer
+    SET blacklist_flag = 1
+    WHERE employer_id = %s
+  """, (employer_id,))
+  
+  db.commit()
+  cur.close()
+  db.close()
+  
+  return "Employer blacklisted successfully."
+
+@app.route("/admin/blacklist-remove", methods=["POST"])
+def admin_blacklist_remove():
+  """Remove an employer from the blacklist"""
+  employer_id = request.form.get("employer_id")
+  
+  if not employer_id:
+    return "Missing employer_id", 400
+  
+  db = get_db()
+  cur = db.cursor()
+  
+  # Delete blacklist records
+  cur.execute("""
+    DELETE FROM Blacklist
+    WHERE employer_id = %s
+  """, (employer_id,))
+  
+  # Update employer blacklist flag
+  cur.execute("""
+    UPDATE Employer
+    SET blacklist_flag = 0
+    WHERE employer_id = %s
+  """, (employer_id,))
+  
+  db.commit()
+  cur.close()
+  db.close()
+  
+  return "Employer removed from blacklist successfully."
+
 if __name__ == "__main__":
   app.run(debug=True)

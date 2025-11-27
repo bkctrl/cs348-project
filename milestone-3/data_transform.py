@@ -1,11 +1,11 @@
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import re
 from faker import Faker
 import datetime
 
 fake = Faker()
-engine = create_engine('mysql+mysqlconnector://root:@localhost/coop_salaries')  # CHANGE THIS IF NEEDED
+engine = create_engine('mysql+mysqlconnector://root:password@localhost:3306/coop_salaries')
 
 faculties = ['Engineering', 'Mathematics', 'Science', 'Arts', 'Business']
 programs = {
@@ -20,7 +20,6 @@ def parse_salary(s):
   if pd.isna(s): return None
   original = str(s)
   s = str(s).replace(',', '').lower()
-  # Look for explicit /hr values, including approximated ones like ~$51/hr
   match = re.search(r'~\$?(\d+\.?\d*)/hr', s) or re.search(r'(\d+\.?\d*)/hr', s) or re.search(r'(\d+\.?\d*)\s*usd/hr', s)
   if match:
     num = float(match.group(1))
@@ -87,14 +86,44 @@ def parse_stipend(s, dur):
   num *= 0.016  # Approximate INR to CAD
   return round(num, 2)
 
+def clean_term(term_str):
+  """Clean and normalize term names to standard format: Season YYYY"""
+  if pd.isna(term_str): return None
+  term_str = str(term_str).strip()
+  
+  # Remove text in parentheses
+  term_str = re.sub(r'\([^)]*\)', '', term_str).strip()
+  
+  # Extract the most recent year if multiple years are present
+  years = re.findall(r'\b(20\d{2})\b', term_str)
+  if years:
+    year = max(years)  # Use the most recent year
+  else:
+    year = '2025'  # Default year
+  
+  # Determine season
+  term_lower = term_str.lower()
+  if 'winter' in term_lower:
+    season = 'Winter'
+  elif 'spring' in term_lower:
+    season = 'Spring'
+  elif 'summer' in term_lower:
+    season = 'Summer'
+  elif 'fall' in term_lower:
+    season = 'Fall'
+  else:
+    season = 'Fall'  # Default season
+  
+  return f'{season} {year}'
+
 def process_waterloo(df):
   # Clean and parse
   df['Company / Role'] = df['Company / Role'].str.replace('⁠', '').str.strip()
   # Blacklist
   df['reason'] = None
-  mask = df['Company / Role'].str.contains('(See Blacklist)', na=False)
+  mask = df['Company / Role'].str.contains(r'\(See Blacklist\)', na=False, regex=True)
   df.loc[mask, 'reason'] = 'Blacklisted'
-  df['Company / Role'] = df['Company / Role'].str.replace('(See Blacklist)', '').str.strip()
+  df['Company / Role'] = df['Company / Role'].str.replace(r'\(See Blacklist\)', '', regex=True).str.strip()
   # Title
   def extract_title(row):
     if pd.notna(row['Position']): return row['Position']
@@ -170,19 +199,29 @@ def process_data(input_data):
   if 'hourly_rate' in df.columns:
     df['hourly_rate'] = df['hourly_rate'].apply(lambda x: parse_salary(x) if pd.isna(x) or not isinstance(x, (int, float)) else x)
     df = df[df['hourly_rate'].notna() & (df['hourly_rate'] > 0)]
+    df = df[(df['hourly_rate'] >= 15.0) & (df['hourly_rate'] <= 200.0)]
   
   # Defaults
   df['blacklist_flag'] = df.get('reason').notnull().astype(int)
   df['hours_per_week'] = 40
   df['term'] = df['term'].fillna(fake.random_element(['Fall 2025', 'Winter 2025', 'Spring 2026', 'Summer 2026']))
+  # Clean and normalize term names
+  df['term'] = df['term'].apply(clean_term)
+  df['term'] = df['term'].astype(str).str[:50]
   df['location'] = df['location'].fillna(fake.city())
+  if 'notes' not in df.columns:
+    df['notes'] = ''
   df['notes'] = df['notes'].fillna('')
   
   # Employers - insert only new
-  df_employers = df[['name', 'blacklist_flag']].drop_duplicates()
+  # Normalize names to avoid duplicates (strip whitespace, consistent casing)
+  df['name'] = df['name'].str.strip()
+  df_employers = df[['name', 'blacklist_flag']].drop_duplicates(subset=['name'])
   if not df_employers.empty:
-    existing_employers = pd.read_sql('SELECT name FROM Employer', engine)['name'].tolist()
-    new_employers = df_employers[~df_employers['name'].isin(existing_employers)]
+    existing_employers = pd.read_sql('SELECT name FROM Employer', engine)
+    existing_employers['name'] = existing_employers['name'].str.strip()
+    existing_names = existing_employers['name'].tolist()
+    new_employers = df_employers[~df_employers['name'].isin(existing_names)]
     if not new_employers.empty:
       new_employers.to_sql('Employer', engine, if_exists='append', index=False)
   
@@ -216,11 +255,12 @@ def process_data(input_data):
   
   # Update blacklist flags
   with engine.connect() as conn:
-    conn.execute("""
+    conn.execute(text("""
       UPDATE Employer e
       SET e.blacklist_flag = 1
       WHERE EXISTS (SELECT 1 FROM Blacklist b WHERE b.employer_id = e.employer_id);
-    """)
+    """))
+    conn.commit()
   
   # Generate synthetic students and placements for each data row
   with engine.connect() as conn:
@@ -233,10 +273,10 @@ def process_data(input_data):
       name = fake.name()
       # Insert student
       conn.execute(
-        "INSERT INTO Student (name, faculty, program, year) VALUES (%s, %s, %s, %s)",
-        (name, fac, prog, year)
+        text("INSERT INTO Student (name, faculty, program, year) VALUES (:name, :fac, :prog, :year)"),
+        {"name": name, "fac": fac, "prog": prog, "year": year}
       )
-      student_id = conn.execute("SELECT LAST_INSERT_ID()").fetchone()[0]
+      student_id = conn.execute(text("SELECT LAST_INSERT_ID()")).fetchone()[0]
       # Derive start/end dates from term
       term = row['term']
       year_match = re.search(r'(\d{4})', term)
@@ -256,9 +296,10 @@ def process_data(input_data):
         end_date = fake.date_between_dates(date_start=start_date, date_end=start_date + datetime.timedelta(days=120))
       # Insert placement
       conn.execute(
-        "INSERT INTO Placement (student_id, job_id, start_date, end_date) VALUES (%s, %s, %s, %s)",
-        (student_id, job_id, start_date, end_date)
+        text("INSERT INTO Placement (student_id, job_id, start_date, end_date) VALUES (:student_id, :job_id, :start_date, :end_date)"),
+        {"student_id": student_id, "job_id": job_id, "start_date": start_date, "end_date": end_date}
       )
+    conn.commit()
   
   print(f'Processed {len(df)} rows. Tables populated: Employer, JobPosting, Salary, Blacklist, Student, Placement')
 
@@ -277,6 +318,6 @@ def add_synthetic(n=5000):
   synthetic_df = pd.DataFrame(synth_data)
   process_data(synthetic_df)
 
-process_data('waterloo_coop.csv')
+process_data('waterloo.csv')
 process_data('internship.csv')
 add_synthetic()

@@ -11,6 +11,40 @@
     .decile-5, .decile-6 { background-color: #d4edda; }
     .decile-7, .decile-8 { background-color: #cfe2ff; }
     .decile-9, .decile-10 { background-color: #d1e7dd; }
+    .scrollable-table {
+      max-height: 750px;
+      overflow-y: scroll;
+      overflow-x: auto;
+      display: block;
+    }
+    .scrollable-table thead {
+      position: sticky;
+      top: 0;
+      background-color: white;
+      z-index: 10;
+    }
+    /* Custom scrollbar styling for WebKit browsers (Chrome, Safari, Edge) */
+    .scrollable-table::-webkit-scrollbar {
+      width: 14px;
+      height: 14px;
+    }
+    .scrollable-table::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    .scrollable-table::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 10px;
+      border: 2px solid #f1f1f1;
+    }
+    .scrollable-table::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    /* For Firefox */
+    .scrollable-table {
+      scrollbar-width: auto;
+      scrollbar-color: #888 #f1f1f1;
+    }
   </style>
 </head>
 <body class="bg-light">
@@ -32,7 +66,7 @@
                 class="form-control" 
                 id="title" 
                 name="title" 
-                placeholder="e.g., Software Engineer Intern"
+                placeholder="e.g., Co-op Intern"
                 value="{{ title or '' }}">
             </div>
             <div class="col-md-4">
@@ -42,7 +76,7 @@
                 class="form-control" 
                 id="city" 
                 name="city" 
-                placeholder="e.g., Waterloo"
+                placeholder="e.g., Waterloo, ON"
                 value="{{ city or '' }}">
             </div>
             <div class="col-md-4">
@@ -52,7 +86,7 @@
                 class="form-control" 
                 id="term" 
                 name="term" 
-                placeholder="e.g., Winter 2025"
+                placeholder="e.g., Fall 2024"
                 value="{{ term or '' }}">
             </div>
           </div>
@@ -73,7 +107,7 @@
             Showing percentile ranks and deciles for filtered salary data
           </small>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive scrollable-table">
           <table class="table table-hover mb-0">
             <thead>
               <tr>

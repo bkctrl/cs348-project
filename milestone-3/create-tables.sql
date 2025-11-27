@@ -34,7 +34,7 @@ CREATE TABLE JobPosting (
     employer_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
     location VARCHAR(100),
-    term VARCHAR(20),
+    term VARCHAR(50),
     FOREIGN KEY (employer_id)
         REFERENCES Employer(employer_id)
         ON DELETE CASCADE
@@ -48,7 +48,7 @@ CREATE TABLE JobPosting (
 CREATE TABLE Salary (
     salary_id INT AUTO_INCREMENT PRIMARY KEY,
     job_id INT NOT NULL,
-    hourly_rate DECIMAL(6,2) NOT NULL CHECK (hourly_rate >= 0),
+    hourly_rate DECIMAL(8,2) NOT NULL CHECK (hourly_rate >= 0),
     hours_per_week INT CHECK (hours_per_week BETWEEN 0 AND 80),
     notes TEXT,
     FOREIGN KEY (job_id)
@@ -149,10 +149,11 @@ END$$
 
 DELIMITER ;
 
-DELIMITER $$
 -- =====================================
 -- Trigger: Compute average pay across all jobs of an employer after Salary INSERT; conditionally blacklist employer
 -- =====================================
+DELIMITER $$
+
 CREATE TRIGGER auto_flag_low_pay AFTER INSERT ON Salary
 FOR EACH ROW
 BEGIN
@@ -181,10 +182,16 @@ INSERT INTO Blacklist (employer_id, reason, date_added, added_by)
 VALUES (emp_id, 'Auto-flagged for low average pay', CURDATE(), 'admin@system.com');
 END IF;
 
+END$$
+
+DELIMITER ;
+
 -- =====================================
 -- Trigger: Compute average pay across all jobs of an employer after Salary UPDATE; conditionally blacklist employer
 -- =====================================
-CREATE TRIGGER auto_flag_low_pay AFTER UPDATE ON Salary
+DELIMITER $$
+
+CREATE TRIGGER auto_flag_low_pay_update AFTER UPDATE ON Salary
 FOR EACH ROW
 BEGIN
 DECLARE emp_id INT;
@@ -213,7 +220,8 @@ VALUES (emp_id, 'Auto-flagged for low average pay', CURDATE(), 'admin@system.com
 END IF;
 
 END$$
-DELIMITER;
+
+DELIMITER ;
 
 
 -- =====================================
