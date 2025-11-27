@@ -13,43 +13,67 @@
 
 ---
 
-## 🧱 Create and Load the Sample Database
+## 🧱 Project Setup
 
-Create database and schema:
+#### 1. Navigate to Project Directory
 ```bash
-sudo mysql cs348 < create-tables.sql
+cd milestone-3
 ```
 
-Insert sample data and verify (test dataset from C3):
+#### 2. Start MySQL Database with Docker
 ```bash
-sudo mysql cs348 < test-sample.sql
+# Start the MySQL container
+docker-compose up -d
+
+# Verify the container is running
+docker ps
 ```
 
-You can confirm correct population by:
+Feel free to modify `docker-compose.yml` as appropriate!
 
-```bash
-sudo mysql cs348 -e "SELECT * FROM Employer;"
+#### 3. Create Database Schema
+```
+# Load the table definitions
+docker exec -i coop_salaries_db mysql -uroot -ppassword coop_salaries < create-tables.sql
 ```
 
-## How to Generate and Load the Production Dataset
-
-To generate the production dataset, we aggregate real-world co-op salary reports from multiple public sources, clean and normalize them, and supplement with synthetic data to support student/faculty queries.
-
-1. **Download source CSVs**:
-  - Waterloo Co-op Salaries + Blacklist:  
-    https://docs.google.com/spreadsheets/d/1OEDRTAalRsyD1iAO5fkp_8HUJUxbYTavotHhwX0AwBU
-  - Kaggle Internship Opportunities:  
-    Manually download from [kaggle.com/datasets/everydaycodings/internship-opportunities-dataset](https://www.kaggle.com/datasets/everydaycodings/internship-opportunities-dataset)
-
-2. **Run the transformation script**:
+#### 4. Set Up Python Environment
 ```bash
-python data_transform.py
+# Install Python dependencies
+pip3 install pandas sqlalchemy mysql-connector-python faker
 ```
 
-3.  **Verify production data**:
+#### 5. Load Data
 ```bash
-# Compare output to test-production.out
-sudo mysql cs348 < test-production.sql
+# Run the data transformation script
+python3 data_transform.py
+```
+
+#### 6. Install Flask Application Dependencies
+```bash
+cd app
+pip3 install flask mysql-connector-python
+```
+
+#### 7. Run the Flask Application
+```bash
+python3 app.py
+```
+Application will start on: http://127.0.0.1:5000
+
+#### API Endpoints:
+
+Add Employer to Blacklist
+```bash
+curl -X POST http://127.0.0.1:5000/admin/blacklist-add \
+  -d "employer_id=6" \
+  -d "reason=Failed to pay interns"
+```
+
+Remove Employer from Blacklist
+```bash
+curl -X POST http://127.0.0.1:5000/admin/blacklist-remove \
+  -d "employer_id=6"
 ```
 
 ## 📌 Implemented Features (`app/app.py`)
@@ -154,6 +178,7 @@ Visit http://127.0.0.1:5000.
 
 #### Feature: Average Salary by Term (R9)
 <img width="1477" height="472" alt="Screenshot 2025-10-19 at 3 57 16 AM" src="https://github.com/user-attachments/assets/0f1bc9ec-50f0-465f-92dc-1fea2902c4fe" />
+
 
 
 
