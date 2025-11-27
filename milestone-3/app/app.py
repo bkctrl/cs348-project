@@ -348,12 +348,10 @@ def safe_employers():
 # Feature: Auto-Flagging Low-Paying Employers (R14)
 @app.route("/admin/add-salary", methods=["POST"])
 def add_salary():
-
   job_id = request.form.get("job_id")
   hourly_rate = float(request.form.get("hourly_rate"))
   hours_per_week = int(request.form.get("hours_per_week"))
   notes = request.form.get("notes")
-  admin_user = "admin@system.com"  # From session in production
   
   conn = get_db()
   cursor = conn.cursor()
