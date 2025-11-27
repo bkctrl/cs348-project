@@ -5,7 +5,7 @@ from faker import Faker
 import datetime
 
 fake = Faker()
-engine = create_engine('mysql+mysqlconnector://root:@localhost/coop_salaries')  # Adjusted based on app.py defaults
+engine = create_engine('mysql+mysqlconnector://root:@localhost/coop_salaries')  # CHANGE THIS IF NEEDED
 
 faculties = ['Engineering', 'Mathematics', 'Science', 'Arts', 'Business']
 programs = {
@@ -65,17 +65,27 @@ def parse_salary(s):
     return round(num, 2)
   return None
 
-def parse_stipend(s):
-  if pd.isna(s): return None
-  s = str(s).replace(',', '').lower()
-  if 'unpaid' in s: return 0
-  match = re.search(r'(\d+\.?\d*)', s)
-  if match:
+def parse_stipend(s, dur):
+  if pd.isna(s) or pd.isna(dur): return None
+  s = str(s).replace(',', '').replace('₹', '').replace(' ', '').lower()
+  dur_str = str(dur).lower()
+  match_dur = re.search(r'(\d+)', dur_str)
+  months = float(match_dur.group(1)) if match_dur else 3.0  # Default to 3 if not parsable
+  if 'unpaid' in s or 'performancebased' in s: return 0
+  # Handle ranges like 5000-10000
+  match_range = re.search(r'(\d+\.?\d*)-(\d+\.?\d*)', s)
+  if match_range:
+    num = (float(match_range.group(1)) + float(match_range.group(2))) / 2
+  else:
+    match = re.search(r'(\d+\.?\d*)', s)
+    if not match: return None
     num = float(match.group(1))
-    if 'lump sum' in s: num /= 6  # Assume 6 months for lump sum
-    num *= 0.016  # Approximate INR to CAD conversion
-    return round(num, 2)
-  return None
+  # If lump sum, divide by months to get monthly
+  if 'lumpsum' in s:
+    num /= months
+  # Assume others are monthly unless specified
+  num *= 0.016  # Approximate INR to CAD
+  return round(num, 2)
 
 def process_waterloo(df):
   # Clean and parse
@@ -116,7 +126,7 @@ def process_internship(df):
   # Term (default since start_date is 'Immediately')
   df['term'] = 'Winter 2026'
   # Monthly salary from stipend
-  df['monthly_salary'] = df['stipend'].apply(parse_stipend)
+  df['monthly_salary'] = df.apply(lambda row: parse_stipend(row['stipend'], row['duration']), axis=1)
   # Notes
   df['notes'] = df['start_date'] + ' for ' + df['duration']
   # No reason
@@ -168,17 +178,26 @@ def process_data(input_data):
   df['location'] = df['location'].fillna(fake.city())
   df['notes'] = df['notes'].fillna('')
   
-  # Employers
+  # Employers - insert only new
   df_employers = df[['name', 'blacklist_flag']].drop_duplicates()
-  df_employers.to_sql('Employer', engine, if_exists='append', index=False)
+  if not df_employers.empty:
+    existing_employers = pd.read_sql('SELECT name FROM Employer', engine)['name'].tolist()
+    new_employers = df_employers[~df_employers['name'].isin(existing_employers)]
+    if not new_employers.empty:
+      new_employers.to_sql('Employer', engine, if_exists='append', index=False)
   
   # Fetch employer IDs
   df_employers_loaded = pd.read_sql('SELECT employer_id, name FROM Employer', engine)
   df = df.merge(df_employers_loaded, on='name')
   
-  # JobPostings
+  # JobPostings - insert only new
   df_jobs = df[['employer_id', 'title', 'location', 'term']].drop_duplicates()
-  df_jobs.to_sql('JobPosting', engine, if_exists='append', index=False)
+  if not df_jobs.empty:
+    existing_jobs = pd.read_sql('SELECT employer_id, title, location, term, job_id FROM JobPosting', engine)
+    df_jobs = df_jobs.merge(existing_jobs, on=['employer_id', 'title', 'location', 'term'], how='left', indicator=True)
+    new_jobs = df_jobs[df_jobs['_merge'] == 'left_only'].drop(columns=['_merge', 'job_id'])
+    if not new_jobs.empty:
+      new_jobs.to_sql('JobPosting', engine, if_exists='append', index=False)
   
   # Fetch job IDs
   df_jobs_loaded = pd.read_sql('SELECT job_id, employer_id, title, location, term FROM JobPosting', engine)
