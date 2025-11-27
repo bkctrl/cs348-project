@@ -48,8 +48,8 @@ python data_transform.py
 
 3.  **Verify production data**:
 ```bash
-# Compare output to milestone-3/test-production.out
-sudo mysql cs348 < milestone-3/test-production.sql
+# Compare output to test-production.out
+sudo mysql cs348 < test-production.sql
 ```
 
 ## 📌 Implemented Features (`app/app.py`)
