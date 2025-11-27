@@ -79,110 +79,65 @@ curl -X POST http://127.0.0.1:5000/admin/blacklist-remove \
 
 ## 📌 Implemented Features (`app/app.py`)
 
+### Basic Features (R6-R10)
 #### 1. Keyword Search (R6)
 
 Route: `/search`
 
 Description: Search job postings by title, employer, or location using partial matches.
 
-#### 2. Average Salary by Faculty / Program (R8)
-
-Route: `/avg-salary`
-
-Description: Displays average hourly salaries grouped by faculty and program, with optional filters for faculty, program keyword, and term.
-
-#### 3. Average Salary by Term (R9)
-
-Route: `/avg-by-term`
-
-Description: Aggregates salary by academic term, showing average hourly wage and number of reports.
-
-#### 4. View Blacklisted Employers (R10)
-
-Route: `/blacklist`
-
-Description: Displays employers flagged as blacklisted, including reason and date added.
-
-#### 5. Top-Paying Companies by Given Role (R7)
+#### 2. Top-Paying Companies by Given Role (R7)
 
 Route: `/top-companies`
 
 Description: User selects a job role and views top 20 employers ranked by average hourly rate.
 
-### 🔍 Additional Implemented Features
-#### 6. Employers with Blacklist Flag
+#### 3. Average Salary by Faculty / Program (R8)
 
-Route: `/employers`
+Route: `/avg-salary`
 
-#### 7. Jobs with Salary Info (All Reports)
+Description: Displays average hourly salaries grouped by faculty and program, with optional filters for faculty, program keyword, and term.
 
-Route: `/salaries`
+#### 4. Average Salary by Term (R9)
 
-#### 8. Companies Paying Below Threshold
+Route: `/avg-by-term`
 
-Route: `/low-wage`
+Description: Aggregates salary by academic term, showing average hourly wage and number of reports.
 
-#### 9. Average Salary by Job Title
+#### 5. View Blacklisted Employers (R10)
 
-Route: `/avg-by-title`
+Route: `/blacklist`
 
-
-## 🚀 Run the Application
-Set up virtual environment:
-```bash
-cd milestone-1/app
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-Then edit your environment file (`.env`):
-
-```bash
-DB_HOST=127.0.0.1
-DB_USER=
-DB_PASS=
-DB_NAME=coop_salaries
-FLASK_ENV=development
-```
-
-Run the Flask app:
-```bash
-python3 app.py
-```
-
-Visit http://127.0.0.1:5000. 
+Description: Displays employers flagged as blacklisted, including reason and date added.
 
 
-#### Home Screen
-<img width="1411" height="553" alt="Screenshot 2025-10-19 at 3 56 12 AM" src="https://github.com/user-attachments/assets/cf96d8e4-cf3d-49f9-8f06-8349146088ef" />
+### Advanced Features (R11-R15)
+#### 6. Full-Text Relevance Search (R11)
 
+**Route:** `/advanced-search`  
+**Description:** Provides an “advanced search” interface that searches titles, locations, and employer names using a single keyword and returns matching jobs ordered by hourly rate. (Implemented with `LIKE` for compatibility, but designed as an advanced search feature.)
 
-#### Employers with `blacklist_flag`
-<img width="1382" height="491" alt="Screenshot 2025-10-19 at 3 56 28 AM" src="https://github.com/user-attachments/assets/07fe6eb0-9a8d-4325-b1fc-c04fa7d1b087" />
+#### 7. Add & Remove Blacklist Entry (Transactional) (R12)
 
+**Route:** `/admin/blacklist-add`, `/admin/blacklist-remove`
+**Description:** Admin-only feature that inserts a blacklist record and updates the employer’s blacklist flag inside a single transaction, with rollback on failure to maintain consistency.
 
-#### Jobs with salary info (ordered by $ desc)
-<img width="1461" height="548" alt="Screenshot 2025-10-19 at 3 56 39 AM" src="https://github.com/user-attachments/assets/9a136222-199b-4319-90a7-b3d21dbcef1e" />
+#### 8. Safe Employer Recommendations by Faculty (R13)
 
+**Route:** `/safe-employers`  
+**Description:** Recommends “safe” employers for a given faculty by combining Placement, Student, Salary, JobPosting, and Employer data to:
+- Exclude blacklisted employers  
+- Require a minimum number of placements  
+- Exclude employers with salaries significantly below the faculty average  
+Results are sorted by average hourly rate and number of placements.
 
-#### Companies paying below threshold (default $18)
-<img width="1468" height="540" alt="Screenshot 2025-10-19 at 3 56 50 AM" src="https://github.com/user-attachments/assets/308c16ab-64fa-401d-b345-7f1392f2e62e" />
+#### 9. Auto-Flagging Low-Paying Employers (R14)
 
-#### Average Salary by Job Title
-<img width="1440" height="599" alt="Screenshot 2025-10-19 at 3 57 05 AM" src="https://github.com/user-attachments/assets/6675ae69-9520-451f-bb68-0f398b8c381f" />
+**Route:** `/admin/add-salary`  
+**Description:** Admin endpoint for inserting or updating salary reports (via `INSERT ... ON DUPLICATE KEY UPDATE`) as part of an auto-flagging workflow for low-paying employers.
 
+#### 10. Salary Percentiles & Bands (R15)
 
-#### Feature: Keyword Search (R6)
-<img width="1451" height="597" alt="Screenshot 2025-10-19 at 3 57 29 AM" src="https://github.com/user-attachments/assets/1b33dbc9-5f2f-496f-9d76-53dc0bfe21f2" />
-
-
-#### Feature: Average Salary by Term (R9)
-<img width="1477" height="472" alt="Screenshot 2025-10-19 at 3 57 16 AM" src="https://github.com/user-attachments/assets/0f1bc9ec-50f0-465f-92dc-1fea2902c4fe" />
-
-
-
-
-
-
+**Route:** `/salary-bands`  
+**Description:** Computes salary percentile ranks and decile bands for jobs filtered by title, city, and term, using MySQL window functions (`PERCENT_RANK`, `NTILE(10)`). Shows where each job’s pay sits in the distribution (e.g., bottom 20%, median, top 10%).
 
