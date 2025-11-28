@@ -20,6 +20,16 @@
 cd milestone-3
 ```
 
+#### 1.1 Set Environment Variables
+Create a `.env` file. For testing purposes, you could have:
+```bash
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASS=password
+DB_NAME=coop_salaries
+```
+
 #### 2. Start MySQL Database with Docker
 ```bash
 # Start the MySQL container
@@ -140,4 +150,5 @@ Results are sorted by average hourly rate and number of placements.
 
 **Route:** `/salary-bands`  
 **Description:** Computes salary percentile ranks and decile bands for jobs filtered by title, city, and term, using MySQL window functions (`PERCENT_RANK`, `NTILE(10)`). Shows where each job’s pay sits in the distribution (e.g., bottom 20%, median, top 10%).
+
 
