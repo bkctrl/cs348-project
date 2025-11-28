@@ -169,11 +169,11 @@ def process_data(input_data):
     filename = 'unknown'
   else:
     filename = input_data
-    skip = 1 if 'waterloo_coop.csv' in filename else 0
+    skip = 1 if 'waterloo.csv' in filename else 0
     df = pd.read_csv(input_data, skiprows=skip)
   
   # File-specific processing
-  if 'waterloo_coop.csv' in filename:
+  if 'waterloo.csv' in filename:
     df = process_waterloo(df)
   elif 'internship.csv' in filename:
     df = process_internship(df)
