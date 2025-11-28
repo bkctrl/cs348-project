@@ -31,6 +31,7 @@ DB_NAME=coop_salaries
 ```
 
 #### 2. Start MySQL Database with Docker
+Install docker if not yet installed.
 ```bash
 # Start the MySQL container
 docker pull mysql:8.0
@@ -150,5 +151,6 @@ Results are sorted by average hourly rate and number of placements.
 
 **Route:** `/salary-bands`  
 **Description:** Computes salary percentile ranks and decile bands for jobs filtered by title, city, and term, using MySQL window functions (`PERCENT_RANK`, `NTILE(10)`). Shows where each job’s pay sits in the distribution (e.g., bottom 20%, median, top 10%).
+
 
 
